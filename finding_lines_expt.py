@@ -23,6 +23,7 @@ dist_pickle = pickle.load(open('./camera_cal/wide_dist_pickle.p', 'rb'))
 mtx = dist_pickle['mtx']
 dist = dist_pickle['dist']
 
+average_frames = 20
 
 #kernel size definition
 ksize = 3
@@ -49,8 +50,8 @@ threshold = [[0,70],
              [220,255]]
 
 #create objects of the left and right lane
-left_info = Line()
-right_info = Line()
+left_info = Line(average_frames,h)
+right_info = Line(average_frames,h)
 
 for i, img in enumerate(reader):
     #frame = cv2.imread(img)
@@ -117,21 +118,33 @@ for i, img in enumerate(reader):
     get_radius_of_curvature(left_info, 719)
     get_radius_of_curvature(right_info, 719)
 
-    dist_to_center(left_info, np.max(ploty))
-    dist_to_center(right_info, np.max(ploty))
+    dist_to_center(left_info)
+    dist_to_center(right_info)
+
+    #update x for left and right lanes
+    left_info.update_xfitted()
+    right_info.update_xfitted()
+
+    #find the average coefficients of left and right
+    left_info.get_best_fit()
+    right_info.get_best_fit()
+
+    #do the First last out operation
+    left_info.update_circ_buf()
+    right_info.update_circ_buf()
 
     position_offset = car_position_to_center(left_info, right_info)
 
-    left_fitx = left_info.current_fit[0] * ploty ** 2 + left_info.current_fit[1] * ploty + left_info.current_fit[2]
-    right_fitx = right_info.current_fit[0] * ploty ** 2 + right_info.current_fit[1] * ploty + right_info.current_fit[2]
+    #left_fitx = left_info.current_fit[0] * left_info.ploty ** 2 + left_info.current_fit[1] * left_info.ploty + left_info.current_fit[2]
+    #right_fitx = right_info.current_fit[0] * right_info.ploty ** 2 + right_info.current_fit[1] * right_info.ploty + right_info.current_fit[2]
     #draw the lane back to the original video feed
     # Create an image to draw the lines on
     color_warp = np.zeros_like(warped).astype(np.uint8)
     #color_warp = np.dstack((warp_zero, warp_zero, warp_zero))
 
     # Recast the x and y points into usable format for cv2.fillPoly()
-    pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
-    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
+    pts_left = np.array([np.transpose(np.vstack([left_info.bestx, left_info.ploty]))])
+    pts_right = np.array([np.flipud(np.transpose(np.vstack([right_info.bestx, right_info.ploty])))])
     pts = np.hstack((pts_left, pts_right))
 
     # Draw the lane onto the warped blank image
@@ -141,6 +154,7 @@ for i, img in enumerate(reader):
     else:
         poly_color = (0, 255, 0)
     cv2.fillPoly(color_warp, np.int_([pts]), poly_color)
+   # plt.imshow(color_warp)
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
     newwarp = cv2.warpPerspective(color_warp, Minv, (img.shape[1], img.shape[0]))
