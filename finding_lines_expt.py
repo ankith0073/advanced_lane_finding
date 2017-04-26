@@ -12,7 +12,7 @@ from helper_functions import *
 from jitter_info import Line
 
 images = glob.glob('./test_images/straight_lines*.jpg')
-input_video = 'project_video.mp4'
+input_video = 'challenge_video.mp4'
 output_video_folder = './'
 out_color_thresolded = imageio.get_writer(output_video_folder + 'output' + input_video  , fps=20)
 reader = imageio.get_reader('./' + input_video)

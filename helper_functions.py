@@ -108,23 +108,20 @@ def fit_first(binary_warped,left_info, right_info):
         left_info.detected = True
         left_info.fit_world = np.polyfit(lefty *ym_per_pix,  leftx*xm_per_pix,2)
         #left_info.current_fit.append(left_fit)
-        left_info.current_fit = left_fit
+        left_info.current_fit[:,0] = left_fit
     else:
         left_info.detected = False
 
     if rightx.size != 0 and righty.size != 0:
         right_fit = np.polyfit(righty, rightx, 2)
         right_info.detected = True
-        right_info.current_fit = right_fit
+        right_info.current_fit[:,0] = right_fit
         right_info.fit_world = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
     else:
         right_info.detected = False
 
 
-    # Generate x and y values for plotting
-    ploty = np.linspace(0, binary_warped.shape[0] - 1, binary_warped.shape[0])
-    # left_fitx = left_fit[0] * ploty ** 2 + left_fit[1] * ploty + left_fit[2]
-    # right_fitx = right_fit[0] * ploty ** 2 + right_fit[1] * ploty + right_fit[2]
+
 
     out_img[nonzeroy[left_lane_inds], nonzerox[left_lane_inds]] = [255, 0, 0]
     out_img[nonzeroy[right_lane_inds], nonzerox[right_lane_inds]] = [0, 0, 255]
@@ -148,11 +145,12 @@ def fit(binary_warped, left_info, right_info):
     nonzeroy = np.array(nonzero[0])
     nonzerox = np.array(nonzero[1])
     margin = 50
-    left_lane_inds = ((nonzerox > (left_info.current_fit[0] * (nonzeroy ** 2) + left_info.current_fit[1] * nonzeroy + left_info.current_fit[2] - margin)) & (
-        nonzerox < (left_info.current_fit[0] * (nonzeroy ** 2) + left_info.current_fit[1] * nonzeroy + left_info.current_fit[2] + margin)))
+
+    left_lane_inds = ((nonzerox > (left_info.best_fit[0] * (nonzeroy ** 2) + left_info.best_fit[1] * nonzeroy + left_info.best_fit[2] - margin)) & (
+        nonzerox < (left_info.best_fit[0] * (nonzeroy ** 2) + left_info.best_fit[1] * nonzeroy + left_info.best_fit[2] + margin)))
     right_lane_inds = (
-        (nonzerox > (right_info.current_fit[0] * (nonzeroy ** 2) + right_info.current_fit[1] * nonzeroy + right_info.current_fit[2] - margin)) & (
-            nonzerox < (right_info.current_fit[0] * (nonzeroy ** 2) + right_info.current_fit[1] * nonzeroy + right_info.current_fit[2] + margin)))
+        (nonzerox > (right_info.best_fit[0] * (nonzeroy ** 2) + right_info.best_fit[1] * nonzeroy + right_info.best_fit[2] - margin)) & (
+            nonzerox < (right_info.best_fit[0] * (nonzeroy ** 2) + right_info.best_fit[1] * nonzeroy + right_info.best_fit[2] + margin)))
 
     # Again, extract left and right line pixel positions
     leftx = nonzerox[left_lane_inds]
@@ -167,14 +165,14 @@ def fit(binary_warped, left_info, right_info):
         left_info.detected = True
         left_info.fit_world = np.polyfit(lefty * ym_per_pix, leftx * xm_per_pix, 2)
         # left_info.current_fit.append(left_fit)
-        left_info.current_fit = left_fit
+        left_info.current_fit[:,0] = left_fit
     else:
         left_info.detected = False
 
     if rightx.size != 0 and righty.size != 0:
         right_fit = np.polyfit(righty, rightx, 2)
         right_info.detected = True
-        right_info.current_fit = right_fit
+        right_info.current_fit[:,0] = right_fit
         right_info.fit_world = np.polyfit(righty * ym_per_pix, rightx * xm_per_pix, 2)
     else:
         right_info.detected = False
@@ -213,14 +211,15 @@ def get_radius_of_curvature(poly_data, y_eval):
     curverad = ((1 + (2 * poly_data.fit_world[0] * y_eval +  poly_data.fit_world[1]) ** 2) ** 1.5) / np.absolute(2 *  poly_data.fit_world[0])
     poly_data.radius_of_curvature = curverad
 
-def dist_to_center(poly_data, y_eval):
+def dist_to_center(poly_data):
     ym_per_pix = 3.048 / 100  # meters per pixel in y dimension, lane line is 10 ft = 3.048 meters
     xm_per_pix = 3.7 / 378  # meters per pixel in x dimension, lane width is 12 ft = 3.7 meters
     center_of_image = 1280 / 2
+    y_eval = np.max(poly_data.ploty)
     #dist of line to center of lane is dist from the center of the image to the left or right lane line
 
     #find x cooresponding to y_eval given a polynomial coefficient
-    corr_x = poly_data.current_fit[0] * y_eval ** 2 + poly_data.current_fit[1] * y_eval + poly_data.current_fit[2]
+    corr_x = poly_data.current_fit[0,0] * y_eval ** 2 + poly_data.current_fit[1,0] * y_eval + poly_data.current_fit[2,0]
 
     #Pixel distance between center of image and x
     pixel_dist = np.absolute(corr_x - center_of_image)
