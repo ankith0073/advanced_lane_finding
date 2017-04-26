@@ -135,12 +135,26 @@ for i, img in enumerate(reader):
     pts = np.hstack((pts_left, pts_right))
 
     # Draw the lane onto the warped blank image
-    cv2.fillPoly(color_warp, np.int_([pts]), (0, 255, 0))
+    #plot the color in red if offset from center is larger than 0.5, indicating lane departure warning
+    if position_offset > 0.5:
+        poly_color = (255, 0 ,0)
+    else:
+        poly_color = (0, 255, 0)
+    cv2.fillPoly(color_warp, np.int_([pts]), poly_color)
 
     # Warp the blank back to original image space using inverse perspective matrix (Minv)
     newwarp = cv2.warpPerspective(color_warp, Minv, (img.shape[1], img.shape[0]))
     # Combine the result with the original image
     result = cv2.addWeighted(undistort, 1, newwarp, 0.3, 0)
+    #plt.imshow(result)
+
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    print_text = 'Curvature     :' + ' {:0.2f}'.format((right_info.radius_of_curvature + left_info.radius_of_curvature)/2)
+    cv2.putText(result, print_text, (500, 300), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+    print_text = 'Center Offset :' + ' {:0.2f}'.format(position_offset)
+    cv2.putText(result, print_text, (500, 330), font, 1, (255, 255, 255), 1, cv2.LINE_AA)
+
     #plt.imshow(result)
     out_color_thresolded.append_data(result)
 
