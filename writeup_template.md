@@ -29,6 +29,8 @@ The goals / steps of this project are the following:
 [image8]: ./output_images/color_threshold.png "color_threshold"
 [image9]: ./output_images/gradient_threshold.png "gradient threshold"
 [image10]: ./output_images/birds_eye_view.png "Birds eye view"
+[image11]: ./output_images/poly_fit.png "Fit polynomial"
+[image12]: ./output_images/Overlayed_back.png "Overlayed"
 [video1]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
@@ -95,24 +97,24 @@ The S and V channels are again subjected to gradient thresholds in the horizonta
 
 The above outputs can be found in code cells 12 and 13 of iPython notebook
 
-
-![alt text][image4]
-
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+If in previous frame if polynomial is not fit then a histogram search is done. once polynomial is fit in previous frame, only the vicinity of polynomial is checked for pixels . The code can be found in code cell 15 of ipython notebook advanced_lane_finding.ipynb
 
-![alt text][image5]
+![alt_text][image11]
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+The radius of curvature was implemented using the function get_radius_of_curvature() in helper_function.py
+The offset to the center was done using the function car_position_to_center() function in helper_functions.py
+
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+I implemented this step in lines 146 through 168 in my code in `finding_lines_expt.py`
+Here is an example of the test image
 
-![alt text][image6]
+![alt text][image12]
 
 ---
 
@@ -120,7 +122,7 @@ I implemented this step in lines # through # in my code in `yet_another_file.py`
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+Here's a [link to my video result](./ouputproject_video.mp4)
 
 ---
 
@@ -128,4 +130,7 @@ Here's a [link to my video result](./project_video.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+Here the major problem is 
+-> The solution is very prone to parameter tuning. Parameters tuned for a use case may not work well another use case
+-> The implemented temporal filtering which filters 20 frames of polynomial coeffcients, takes into account a present polynomial fit which differs from previous fits as a bad frame!. This metod works if previous frames are a good fit, else it results in catastropie. 
+-> A buffer reset setting needed which reset the averaging buffer when more than a certain number of frames results in different polynomial coeffcients indicating lane shapes have changed 
