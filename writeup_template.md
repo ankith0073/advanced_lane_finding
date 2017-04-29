@@ -31,7 +31,7 @@ The goals / steps of this project are the following:
 [image10]: ./output_images/birds_eye_view.png "Birds eye view"
 [image11]: ./output_images/poly_fit.png "Fit polynomial"
 [image12]: ./output_images/Overlayed_back.png "Overlayed"
-[video1]: ./project_video.mp4 "Video"
+[video1]: ./ouput_images/outputproject_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
 
